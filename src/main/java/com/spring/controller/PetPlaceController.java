@@ -13,7 +13,7 @@ import com.spring.service.PetPlaceService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/places")
+@RequestMapping("/api/local/places")
 @RequiredArgsConstructor
 public class PetPlaceController {
 

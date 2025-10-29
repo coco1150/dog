@@ -1,6 +1,10 @@
 package com.spring.domain;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -22,5 +26,6 @@ public class Disease {
     private String name;              // 질병명 (예: 장염)
     private String description;       // 질병 설명
     @Column(name = "related_symptom_ids", length = 1000)
-    private String relatedSymptomIds; // 연관 증상 ID 목록 json형태로저장
+    @ElementCollection
+    private List<Long> relatedSymptomIds = new ArrayList<>(); // 연관 증상 ID 목록 json형태로저장
 }

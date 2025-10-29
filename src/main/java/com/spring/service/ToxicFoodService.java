@@ -1,99 +1,147 @@
 package com.spring.service;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.spring.domain.ToxicFood;
 import com.spring.dto.ToxicFoodRequestDTO;
 import com.spring.dto.ToxicFoodResponseDTO;
+import com.spring.exception.BadRequestException;
+import com.spring.exception.InternalServerException;
+import com.spring.exception.NotFoundException;
 import com.spring.repository.ToxicFoodRepository;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ToxicFoodService {
 
-	private final ToxicFoodRepository toxicFoodRepository;
+    private final ToxicFoodRepository toxicFoodRepository;
 
-	// 독성 음식 등록
-	public ToxicFoodResponseDTO create(ToxicFoodRequestDTO dto) {
-		ToxicFood food = new ToxicFood();
-		food.setName(dto.getName());
-		food.setCategory(dto.getCategory());
-//		food.setIngredient(dto.getIngredient());
-//		food.setAdditionalIngredient(dto.getAdditionalIngredient());
-		food.setToxicityLevel(dto.getToxicityLevel());
-		food.setDescription(dto.getDescription());
-//		food.setSymptoms(dto.getSymptoms());
-//		food.setSafeDose(dto.getSafeDose());
-//		food.setImageUrl(dto.getImageUrl());
-		food.setNote(dto.getNote());
+    // 독성 음식 등록
+    public ToxicFoodResponseDTO create(ToxicFoodRequestDTO dto) {
+        if (dto == null) {
+            throw new BadRequestException("등록할 식품 데이터가 비어 있습니다.");
+        }
+        if (dto.getName() == null || dto.getName().isBlank()) {
+            throw new BadRequestException("식품 이름은 필수 입력 항목입니다.");
+        }
 
-		// 중복 이름 검증
-		if (toxicFoodRepository.existsByName(food.getName())) {
-			throw new IllegalArgumentException("이미 등록된 식품 이름입니다.");
-		}
+        try {
+            // 중복 이름 검증
+            if (toxicFoodRepository.existsByName(dto.getName())) {
+                throw new BadRequestException("이미 등록된 식품 이름입니다.");
+            }
 
-		ToxicFood saved = toxicFoodRepository.save(food);
-		return ToxicFoodResponseDTO.fromEntity(saved);
-	}
+            ToxicFood food = new ToxicFood();
+            food.setName(dto.getName());
+            food.setCategory(dto.getCategory());
+            food.setToxicityLevel(dto.getToxicityLevel());
+            food.setDescription(dto.getDescription());
+            food.setNote(dto.getNote());
 
-	// 독성 식품 수정
-	public ToxicFoodResponseDTO update(Long id, ToxicFoodRequestDTO dto) {
-		ToxicFood existing = toxicFoodRepository.findById(id)
-				.orElseThrow(() -> new NoSuchElementException("해당 식품 정보가 존재하지 않습니다."));
+            ToxicFood saved = toxicFoodRepository.save(food);
+            return ToxicFoodResponseDTO.fromEntity(saved);
+        } catch (BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new InternalServerException("독성 음식 등록 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
 
-		if (dto.getName() != null)
-			existing.setName(dto.getName());
-		if (dto.getCategory() != null)
-			existing.setCategory(dto.getCategory());
-		if (dto.getToxicityLevel() != null)
-			existing.setToxicityLevel(dto.getToxicityLevel());
-		if (dto.getDescription() != null)
-			existing.setDescription(dto.getDescription());
-		if (dto.getNote() != null)
-			existing.setNote(dto.getNote());
+    // 독성 음식 수정
+    public ToxicFoodResponseDTO update(Long id, ToxicFoodRequestDTO dto) {
+        if (dto == null) {
+            throw new BadRequestException("수정할 식품 데이터가 비어 있습니다.");
+        }
 
-		ToxicFood updated = toxicFoodRepository.save(existing);
-		return ToxicFoodResponseDTO.fromEntity(updated);
-	}
+        try {
+            ToxicFood existing = toxicFoodRepository.findById(id)
+                    .orElseThrow(() -> new NotFoundException("수정하려는 식품 정보가 존재하지 않습니다."));
 
-	// 독성 식품 삭제
-	public void delete(Long id) {
-		if (!toxicFoodRepository.existsById(id)) {
-			throw new NoSuchElementException("삭제할 식품 정보가 존재하지 않습니다.");
-		}
-		toxicFoodRepository.deleteById(id);
-	}
+            if (dto.getName() != null)
+                existing.setName(dto.getName());
+            if (dto.getCategory() != null)
+                existing.setCategory(dto.getCategory());
+            if (dto.getToxicityLevel() != null)
+                existing.setToxicityLevel(dto.getToxicityLevel());
+            if (dto.getDescription() != null)
+                existing.setDescription(dto.getDescription());
+            if (dto.getNote() != null)
+                existing.setNote(dto.getNote());
 
-	// 전체 목록 조회
-	public List<ToxicFoodResponseDTO> getAll() {
-		return toxicFoodRepository.findAll().stream().map(ToxicFoodResponseDTO::fromEntity)
-				.collect(Collectors.toList());
-	}
+            ToxicFood updated = toxicFoodRepository.save(existing);
+            return ToxicFoodResponseDTO.fromEntity(updated);
+        } catch (NotFoundException | BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new InternalServerException("식품 정보 수정 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
 
-	//ID로 조회
-	public ToxicFoodResponseDTO getById(Long id) {
-	    ToxicFood food = toxicFoodRepository.findById(id)
-	            .orElseThrow(() -> new NoSuchElementException("해당 ID의 식품 정보가 존재하지 않습니다."));
-	    return ToxicFoodResponseDTO.fromEntity(food);
-	}
+    // 독성 음식 삭제
+    public void delete(Long id) {
+        try {
+            if (!toxicFoodRepository.existsById(id)) {
+                throw new NotFoundException("삭제하려는 식품 정보가 존재하지 않습니다.");
+            }
+            toxicFoodRepository.deleteById(id);
+        } catch (NotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new InternalServerException("식품 정보 삭제 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
 
-	// 이름으로 조회
-	public ToxicFoodResponseDTO getByName(String name) {
-		ToxicFood food = toxicFoodRepository.findByName(name)
-				.orElseThrow(() -> new NoSuchElementException("해당 이름의 식품 정보를 찾을 수 없습니다."));
-		return ToxicFoodResponseDTO.fromEntity(food);
-	}
+    // 전체 목록 조회
+    public List<ToxicFoodResponseDTO> getAll() {
+        try {
+            List<ToxicFood> foods = toxicFoodRepository.findAll();
+            if (foods.isEmpty()) {
+                throw new NotFoundException("등록된 독성 식품이 없습니다.");
+            }
+            return foods.stream()
+                    .map(ToxicFoodResponseDTO::fromEntity)
+                    .collect(Collectors.toList());
+        } catch (NotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new InternalServerException("식품 목록 조회 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
 
-//	// 카테고리별 조회
-//	public List<ToxicFoodResponseDTO> getByCategory(String categoryName) {
-//		return toxicFoodRepository.findAll().stream().filter(f -> f.getCategory().name().equalsIgnoreCase(categoryName))
-//				.map(ToxicFoodResponseDTO::fromEntity).collect(Collectors.toList());
-//	}
+    // ID로 조회
+    public ToxicFoodResponseDTO getById(Long id) {
+        try {
+            ToxicFood food = toxicFoodRepository.findById(id)
+                    .orElseThrow(() -> new NotFoundException("해당 ID의 식품 정보가 존재하지 않습니다."));
+            return ToxicFoodResponseDTO.fromEntity(food);
+        } catch (NotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new InternalServerException("식품 조회 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
 
+    // 이름으로 조회
+    public ToxicFoodResponseDTO getByName(String name) {
+        if (name == null || name.isBlank()) {
+            throw new BadRequestException("식품 이름을 입력해야 합니다.");
+        }
+
+        try {
+            ToxicFood food = toxicFoodRepository.findByName(name)
+                    .orElseThrow(() -> new NotFoundException("해당 이름의 식품 정보를 찾을 수 없습니다."));
+            return ToxicFoodResponseDTO.fromEntity(food);
+        } catch (NotFoundException | BadRequestException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new InternalServerException("식품 이름 조회 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
 }

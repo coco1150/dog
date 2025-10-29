@@ -1,68 +1,148 @@
 package com.spring.service;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.spring.domain.PetPlace;
 import com.spring.domain.PlaceType;
+import com.spring.exception.BadRequestException;
+import com.spring.exception.InternalServerException;
+import com.spring.exception.NotFoundException;
 import com.spring.repository.PetPlaceRepository;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class PetPlaceService {
 
     private final PetPlaceRepository repository;
 
     // 등록
     public PetPlace create(PetPlace place) {
-        return repository.save(place);
+        if (place == null) {
+            throw new BadRequestException("장소 정보가 비어 있습니다.");
+        }
+        if (place.getName() == null || place.getName().isBlank()) {
+            throw new BadRequestException("장소 이름은 필수 입력 항목입니다.");
+        }
+
+        try {
+            return repository.save(place);
+        } catch (Exception e) {
+            throw new InternalServerException("장소 등록 중 오류가 발생했습니다: " + e.getMessage());
+        }
     }
 
     // 수정
     public PetPlace update(Long id, PetPlace updated) {
-        PetPlace existing = repository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("해당 장소를 찾을 수 없습니다."));
-        existing.setName(updated.getName());
-        existing.setAddress(updated.getAddress());
-        existing.setPhone(updated.getPhone());
-        existing.setLatitude(updated.getLatitude());
-        existing.setLongitude(updated.getLongitude());
-        existing.setType(updated.getType());
-        existing.setPetAllowed(updated.isPetAllowed());
-        existing.setDescription(updated.getDescription());
-        return repository.save(existing);
+        if (updated == null) {
+            throw new BadRequestException("수정할 장소 정보가 비어 있습니다.");
+        }
+
+        try {
+            PetPlace existing = repository.findById(id)
+                    .orElseThrow(() -> new NotFoundException("수정하려는 장소를 찾을 수 없습니다."));
+
+            if (updated.getName() != null)
+                existing.setName(updated.getName());
+            if (updated.getAddress() != null)
+                existing.setAddress(updated.getAddress());
+            if (updated.getPhone() != null)
+                existing.setPhone(updated.getPhone());
+            if (updated.getLatitude() != 0)
+                existing.setLatitude(updated.getLatitude());
+            if (updated.getLongitude() != 0)
+                existing.setLongitude(updated.getLongitude());
+            if (updated.getType() != null)
+                existing.setType(updated.getType());
+            existing.setPetAllowed(updated.isPetAllowed());
+            if (updated.getDescription() != null)
+                existing.setDescription(updated.getDescription());
+
+            return repository.save(existing);
+        } catch (NotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new InternalServerException("장소 수정 중 오류가 발생했습니다: " + e.getMessage());
+        }
     }
 
     // 삭제
     public void delete(Long id) {
-        if (!repository.existsById(id)) {
-            throw new NoSuchElementException("삭제할 장소가 존재하지 않습니다.");
+        try {
+            if (!repository.existsById(id)) {
+                throw new NotFoundException("삭제하려는 장소가 존재하지 않습니다.");
+            }
+            repository.deleteById(id);
+        } catch (NotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new InternalServerException("장소 삭제 중 오류가 발생했습니다: " + e.getMessage());
         }
-        repository.deleteById(id);
     }
 
     // 단일 조회
     public PetPlace getById(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("해당 장소를 찾을 수 없습니다."));
+        try {
+            return repository.findById(id)
+                    .orElseThrow(() -> new NotFoundException("해당 장소를 찾을 수 없습니다."));
+        } catch (NotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new InternalServerException("장소 조회 중 오류가 발생했습니다: " + e.getMessage());
+        }
     }
 
     // 전체 조회
     public List<PetPlace> getAll() {
-        return repository.findAll();
+        try {
+            List<PetPlace> places = repository.findAll();
+            if (places.isEmpty()) {
+                throw new NotFoundException("등록된 장소가 없습니다.");
+            }
+            return places;
+        } catch (NotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new InternalServerException("장소 목록 조회 중 오류가 발생했습니다: " + e.getMessage());
+        }
     }
 
     // 유형별 조회
     public List<PetPlace> getByType(PlaceType type) {
-        return repository.findByType(type);
+        if (type == null) {
+            throw new BadRequestException("유형을 지정해야 합니다.");
+        }
+
+        try {
+            List<PetPlace> results = repository.findByType(type);
+            if (results.isEmpty()) {
+                throw new NotFoundException("해당 유형의 장소가 존재하지 않습니다.");
+            }
+            return results;
+        } catch (NotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new InternalServerException("유형별 장소 조회 중 오류가 발생했습니다: " + e.getMessage());
+        }
     }
 
     // 반려동물 동반 가능 장소 조회
     public List<PetPlace> getPetFriendly() {
-        return repository.findByPetAllowedTrue();
+        try {
+            List<PetPlace> places = repository.findByPetAllowedTrue();
+            if (places.isEmpty()) {
+                throw new NotFoundException("반려동물 동반이 가능한 장소가 없습니다.");
+            }
+            return places;
+        } catch (NotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new InternalServerException("반려동물 동반 가능 장소 조회 중 오류가 발생했습니다: " + e.getMessage());
+        }
     }
 }
