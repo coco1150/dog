@@ -25,19 +25,15 @@ public class ToxicFoodService {
 
     // 독성 음식 등록
     public ToxicFoodResponseDTO create(ToxicFoodRequestDTO dto) {
-        if (dto == null) {
-            throw new BadRequestException("등록할 식품 데이터가 비어 있습니다.");
-        }
-        if (dto.getName() == null || dto.getName().isBlank()) {
-            throw new BadRequestException("식품 이름은 필수 입력 항목입니다.");
-        }
+        if (dto.getName() == null || dto.getName().isBlank())
+            throw new BadRequestException("식품 이름은 필수입니다.");
+        if (dto.getCategory() == null)
+            throw new BadRequestException("식품 카테고리는 필수입니다.");
+
+        if (toxicFoodRepository.existsByName(dto.getName()))
+            throw new BadRequestException("이미 등록된 식품 이름입니다.");
 
         try {
-            // 중복 이름 검증
-            if (toxicFoodRepository.existsByName(dto.getName())) {
-                throw new BadRequestException("이미 등록된 식품 이름입니다.");
-            }
-
             ToxicFood food = new ToxicFood();
             food.setName(dto.getName());
             food.setCategory(dto.getCategory());
@@ -47,10 +43,8 @@ public class ToxicFoodService {
 
             ToxicFood saved = toxicFoodRepository.save(food);
             return ToxicFoodResponseDTO.fromEntity(saved);
-        } catch (BadRequestException e) {
-            throw e;
         } catch (Exception e) {
-            throw new InternalServerException("독성 음식 등록 중 오류가 발생했습니다: " + e.getMessage());
+            throw new InternalServerException("독성 식품 등록 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
 

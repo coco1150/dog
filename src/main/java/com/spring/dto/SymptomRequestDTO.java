@@ -7,7 +7,9 @@ import java.util.List;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.spring.domain.Symptom;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,12 +17,16 @@ import lombok.Setter;
 @Setter
 public class SymptomRequestDTO {
 	@NotNull(message="회원id를 입력해야 합니다.")
+	@Positive(message = "회원 ID는 양수여야 합니다.")
 	private Long memberId;
 	@NotNull(message="동물id를 입력해야 합니다.")
+	@Positive(message = "반려동물 ID는 양수여야 합니다.")
     private Long petId;
 	@NotNull(message="날짜를 지정해야 합니다.")
     private LocalDateTime symptomDate;
+	@NotBlank(message = "증상 설명을 입력해야 합니다.")
     private String description;
+	@NotBlank(message = "선택된 증상 목록은 비워둘 수 없습니다.")
     private String selectedSymptomIds; // 선택된 증상 ID들
     private List<Long> suspectedDiseaseIds; //관련질병id
     

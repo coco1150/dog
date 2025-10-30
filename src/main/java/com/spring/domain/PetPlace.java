@@ -25,8 +25,8 @@ public class PetPlace {
     private String name;             // 장소 이름
     private String address;          // 주소
     private String phone;            // 전화번호
-    private double latitude;         // 위도
-    private double longitude;        // 경도
+    private Double latitude;         // 위도
+    private Double longitude;        // 경도
 
     @Enumerated(EnumType.STRING)
     private PlaceType type;          // 장소 유형 (병원, 식당, 카페 등)

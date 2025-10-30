@@ -21,13 +21,10 @@ public class DiseaseService {
     private final DiseaseRepository diseaseRepository;
 
     // 질병 등록
+    @Transactional
     public Disease create(Disease disease) {
-        if (disease == null) {
-            throw new BadRequestException("질병 데이터가 비어 있습니다.");
-        }
-        if (disease.getName() == null || disease.getName().isBlank()) {
-            throw new BadRequestException("질병 이름은 필수 입력 항목입니다.");
-        }
+        if (disease.getName() == null || disease.getName().isBlank())
+            throw new BadRequestException("질병 이름은 필수입니다.");
 
         try {
             return diseaseRepository.save(disease);
@@ -64,11 +61,18 @@ public class DiseaseService {
     }
 
     // 질병 수정
+    @Transactional
     public Disease update(Long id, Disease updatedDisease) {
-        try {
-            Disease existing = diseaseRepository.findById(id)
-                    .orElseThrow(() -> new NotFoundException("수정하려는 질병이 존재하지 않습니다."));
+        if (id == null || id <= 0)
+            throw new BadRequestException("유효하지 않은 질병 ID입니다.");
 
+        if (updatedDisease == null)
+            throw new BadRequestException("요청 데이터가 비어 있습니다.");
+
+        Disease existing = diseaseRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("해당 질병이 존재하지 않습니다."));
+
+        try {
             if (updatedDisease.getName() != null)
                 existing.setName(updatedDisease.getName());
             if (updatedDisease.getDescription() != null)
@@ -76,11 +80,10 @@ public class DiseaseService {
             if (updatedDisease.getRelatedSymptomIds() != null)
                 existing.setRelatedSymptomIds(updatedDisease.getRelatedSymptomIds());
 
-            return diseaseRepository.save(existing);
-        } catch (NotFoundException e) {
-            throw e;
+            Disease saved = diseaseRepository.save(existing);
+            return saved;
         } catch (Exception e) {
-            throw new InternalServerException("질병 수정 중 오류가 발생했습니다: " + e.getMessage());
+            throw new InternalServerException("질병 정보 수정 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
 
