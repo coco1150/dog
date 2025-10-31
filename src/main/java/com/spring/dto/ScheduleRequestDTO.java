@@ -3,11 +3,8 @@ package com.spring.dto;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import com.spring.domain.Schedule;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,42 +13,37 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class ScheduleRequestDTO {
-//	private Long id; //일정id
-	
-	@NotNull(message="회원id는 필수입니다.")
-	@Positive(message = "회원 ID는 양수여야 합니다.")
-	private Long memberId;//회원id
-	
-//	@NotNull(message="동물id는 필수입니다.")
-//	private Long petId; //동물의 id
-	
-	@NotBlank(message="제목을 입력해야 합니다.")
-	private String title; //제목
-	
-	//private String content; //내용
-	
-	private LocalDateTime scheduleTime; //시간
-	@NotNull(message="반복여부를 선택해야 합니다.")
-	private Boolean isRecurring; //반복여부
-	private String recurrenceType; //반복주기(daily,weekly,monthly,custom)
-	//우선은 주단위로만 (1,2,3주...)
-	//private String recurrenceDetail;//반복유형 정보:weekly->mon,wed...sun , custom->90일...
-	
-	private LocalDate startDate;//시작일
-	private LocalDate endDate;//종료일
 
-    public Schedule toEntity() {
-    	Schedule s = new Schedule();
-    	s.setMemberId(memberId);
-//    	s.setPetId(petId);
-    	s.setTitle(title);
-    	//s.setContent(content);
-    	s.setScheduleTime(scheduleTime);
-    	s.setRecurring(isRecurring);
-    	s.setRecurrenceType(recurrenceType);
-//    	s.setRecurrenceDetail(recurrenceDetail);
-    	s.setStartDate(startDate);
-    	s.setEndDate(endDate);
-        return s;
-    }
+    @NotNull(message = "회원 ID는 필수입니다.")
+    private Long memberId;
+
+    @NotBlank(message = "일정 제목은 비워둘 수 없습니다.")
+    private String title;
+
+    // 단일 일정일 때만 필수
+    private LocalDateTime scheduleTime;
+
+    // 반복 여부 (true/false)
+    @NotNull(message = "반복 여부를 선택해야 합니다.")
+    private Boolean recurring;
+
+    // 반복 유형: DAILY, WEEKLY, MONTHLY
+    private String recurrenceType;
+
+    // 반복 간격(>=1)
+    private Integer interval;
+
+    // 요일 목록을 CSV 문자열로 받음: "MON,WED,FRI"
+    private String daysOfWeek;
+
+    // 매월 n일
+    private Integer dayOfMonth;
+
+    // 반복 횟수(선택)
+    private Integer repeatCount;
+
+    // 반복 시작/종료일
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private LocalDate untilDate;
 }

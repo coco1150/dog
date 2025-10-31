@@ -1,44 +1,58 @@
+// ScheduleResponseDTO.java
 package com.spring.dto;
 
-
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
+import com.spring.domain.RecurrenceRule;
+import com.spring.domain.RecurrenceType;
 import com.spring.domain.Schedule;
-import lombok.Getter;
-import lombok.AllArgsConstructor;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+
+@Builder
 @Getter
 @AllArgsConstructor
 public class ScheduleResponseDTO {
-
     private Long id;
     private Long memberId;
-    //private Long petId;
     private String title;
-    //private String content;
+    private Boolean recurring;
+
+    // 단일 일정일 때만 채워짐
     private LocalDateTime scheduleTime;
-    private boolean recurring;
-    private String recurrenceType;
-   // private String recurrenceDetail;
+
+    // 반복일정 정보 (반복일정일 때만 채워짐)
+    private RecurrenceType recurrenceType;
+    private Integer interval;
+    private List<DayOfWeek> daysOfWeek;
+    private Integer dayOfMonth;
+    private Integer repeatCount;
     private LocalDate startDate;
     private LocalDate endDate;
+    private LocalDate untilDate;
+    
+    public static ScheduleResponseDTO fromEntity(Schedule s) {
+        RecurrenceRule rule = s.getRecurrenceRule();
 
-    // Entity > ResponseDTO 변환 메서드
-    public static ScheduleResponseDTO fromEntity(Schedule schedule) {
-        return new ScheduleResponseDTO(
-                schedule.getId(),
-                schedule.getMemberId(),
-//                schedule.getPetId(),
-                schedule.getTitle(),
-                //schedule.getContent(),
-                schedule.getScheduleTime(),
-                schedule.isRecurring(),
-                schedule.getRecurrenceType(),
-//                schedule.getRecurrenceDetail(),
-                schedule.getStartDate(),
-                schedule.getEndDate()
-        );
+        return ScheduleResponseDTO.builder()
+                .id(s.getId())
+                .memberId(s.getMemberId())
+                .title(s.getTitle())
+                .recurring(s.getRecurring())
+                .scheduleTime(s.getScheduleTime())
+                .recurrenceType(rule != null ? rule.getType() : null)
+                .interval(rule != null ? rule.getInterval() : null)
+                .daysOfWeek(rule != null ? rule.getDaysOfWeek() : null)
+                .dayOfMonth(rule != null ? rule.getDayOfMonth() : null)
+                .repeatCount(rule != null ? rule.getRepeatCount() : null)
+                .untilDate(rule != null ? rule.getUntilDate() : null)
+                .startDate(s.getStartDate())
+                .endDate(s.getEndDate())
+                .build();
     }
-
 }

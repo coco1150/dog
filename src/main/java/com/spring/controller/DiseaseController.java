@@ -17,44 +17,35 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DiseaseController {
 
-    private final DiseaseService diseaseService;
+	private final DiseaseService diseaseService;
 
-    // 등록
-    @PostMapping
-    public ResponseEntity<ApiResponse<Disease>> create(@RequestBody Disease disease) {
-        Disease created = diseaseService.create(disease);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(HttpStatus.CREATED, "질병 등록 성공", created));
-    }
+	@PostMapping
+	public ResponseEntity<ApiResponse<Disease>> create(@RequestBody Disease disease) {
+		Disease saved = diseaseService.create(disease);
+		return ResponseEntity.status(HttpStatus.CREATED)
+				.body(ApiResponse.success(HttpStatus.CREATED, "질병 등록 성공", saved));
+	}
 
-    // 단일 조회
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Disease>> getById(@PathVariable("id") Long id) {
-        Disease result = diseaseService.getById(id);
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "질병 조회 성공", result));
-    }
+	@PutMapping("/{id}")
+	public ResponseEntity<ApiResponse<Disease>> update(@PathVariable("id") Long id, @RequestBody Disease disease) {
+		Disease updated = diseaseService.update(id, disease);
+		return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "질병 수정 성공", updated));
+	}
 
-    // 전체 조회
-    @GetMapping
-    public ResponseEntity<ApiResponse<List<Disease>>> getAll() {
-        List<Disease> list = diseaseService.getAll();
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "전체 질병 목록 조회 성공", list));
-    }
+	// 전체조회
+	@GetMapping
+	public ResponseEntity<ApiResponse<List<Disease>>> getAll() {
+		return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "질병 목록 조회 성공", diseaseService.getAll()));
+	}
 
-    // 수정
-    @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Disease>> update(
-            @PathVariable("id") Long id,
-            @RequestBody Disease disease
-    ) {
-        Disease updated = diseaseService.update(id, disease);
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "질병 수정 성공", updated));
-    }
+	@GetMapping("/{id}")
+	public ResponseEntity<ApiResponse<Disease>> getById(@PathVariable("id") Long id) {
+		return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "질병 조회 성공", diseaseService.getById(id)));
+	}
 
-    // 삭제
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable("id") Long id) {
-        diseaseService.delete(id);
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "질병 삭제 성공", null));
-    }
+	@DeleteMapping("/{id}")
+	public ResponseEntity<ApiResponse<Void>> delete(@PathVariable("id") Long id) {
+		diseaseService.delete(id);
+		return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "질병 삭제 성공", null));
+	}
 }

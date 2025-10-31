@@ -1,7 +1,6 @@
 package com.spring.service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,11 +24,6 @@ public class ToxicFoodService {
 
     // 독성 음식 등록
     public ToxicFoodResponseDTO create(ToxicFoodRequestDTO dto) {
-        if (dto.getName() == null || dto.getName().isBlank())
-            throw new BadRequestException("식품 이름은 필수입니다.");
-        if (dto.getCategory() == null)
-            throw new BadRequestException("식품 카테고리는 필수입니다.");
-
         if (toxicFoodRepository.existsByName(dto.getName()))
             throw new BadRequestException("이미 등록된 식품 이름입니다.");
 
@@ -43,6 +37,9 @@ public class ToxicFoodService {
 
             ToxicFood saved = toxicFoodRepository.save(food);
             return ToxicFoodResponseDTO.fromEntity(saved);
+
+        } catch (BadRequestException e) {
+            throw e;
         } catch (Exception e) {
             throw new InternalServerException("독성 식품 등록 중 오류가 발생했습니다: " + e.getMessage());
         }
@@ -50,14 +47,10 @@ public class ToxicFoodService {
 
     // 독성 음식 수정
     public ToxicFoodResponseDTO update(Long id, ToxicFoodRequestDTO dto) {
-        if (dto == null) {
-            throw new BadRequestException("수정할 식품 데이터가 비어 있습니다.");
-        }
+        ToxicFood existing = toxicFoodRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("수정하려는 식품 정보가 존재하지 않습니다."));
 
         try {
-            ToxicFood existing = toxicFoodRepository.findById(id)
-                    .orElseThrow(() -> new NotFoundException("수정하려는 식품 정보가 존재하지 않습니다."));
-
             if (dto.getName() != null)
                 existing.setName(dto.getName());
             if (dto.getCategory() != null)
@@ -71,7 +64,8 @@ public class ToxicFoodService {
 
             ToxicFood updated = toxicFoodRepository.save(existing);
             return ToxicFoodResponseDTO.fromEntity(updated);
-        } catch (NotFoundException | BadRequestException e) {
+
+        } catch (NotFoundException e) {
             throw e;
         } catch (Exception e) {
             throw new InternalServerException("식품 정보 수정 중 오류가 발생했습니다: " + e.getMessage());
@@ -80,28 +74,27 @@ public class ToxicFoodService {
 
     // 독성 음식 삭제
     public void delete(Long id) {
+        if (!toxicFoodRepository.existsById(id))
+            throw new NotFoundException("삭제하려는 식품 정보가 존재하지 않습니다.");
         try {
-            if (!toxicFoodRepository.existsById(id)) {
-                throw new NotFoundException("삭제하려는 식품 정보가 존재하지 않습니다.");
-            }
             toxicFoodRepository.deleteById(id);
-        } catch (NotFoundException e) {
-            throw e;
         } catch (Exception e) {
             throw new InternalServerException("식품 정보 삭제 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
 
     // 전체 목록 조회
+    @Transactional(readOnly = true)
     public List<ToxicFoodResponseDTO> getAll() {
         try {
             List<ToxicFood> foods = toxicFoodRepository.findAll();
-            if (foods.isEmpty()) {
+            if (foods.isEmpty())
                 throw new NotFoundException("등록된 독성 식품이 없습니다.");
-            }
+
             return foods.stream()
                     .map(ToxicFoodResponseDTO::fromEntity)
-                    .collect(Collectors.toList());
+                    .toList();
+
         } catch (NotFoundException e) {
             throw e;
         } catch (Exception e) {
@@ -110,6 +103,7 @@ public class ToxicFoodService {
     }
 
     // ID로 조회
+    @Transactional(readOnly = true)
     public ToxicFoodResponseDTO getById(Long id) {
         try {
             ToxicFood food = toxicFoodRepository.findById(id)
@@ -123,10 +117,10 @@ public class ToxicFoodService {
     }
 
     // 이름으로 조회
+    @Transactional(readOnly = true)
     public ToxicFoodResponseDTO getByName(String name) {
-        if (name == null || name.isBlank()) {
+        if (name == null || name.isBlank())
             throw new BadRequestException("식품 이름을 입력해야 합니다.");
-        }
 
         try {
             ToxicFood food = toxicFoodRepository.findByName(name)

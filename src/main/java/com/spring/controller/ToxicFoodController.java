@@ -39,37 +39,38 @@ public class ToxicFoodController {
 
     // 수정
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<ToxicFoodResponseDTO>> update(@PathVariable("id") Long id,
-                                                                    @Valid @RequestBody ToxicFoodRequestDTO dto) {
+    public ResponseEntity<ApiResponse<ToxicFoodResponseDTO>> update(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody ToxicFoodRequestDTO dto) {
         ToxicFoodResponseDTO result = toxicFoodService.update(id, dto);
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "수정 성공", result));
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "독성 식품 수정 성공", result));
     }
+
     // 삭제
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable("id") Long id) {
         toxicFoodService.delete(id);
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "삭제 성공", null));
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "독성 식품 삭제 성공", null));
     }
 
     // 전체 조회
     @GetMapping
     public ResponseEntity<ApiResponse<List<ToxicFoodResponseDTO>>> getAll() {
         List<ToxicFoodResponseDTO> list = toxicFoodService.getAll();
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "전체 목록 조회 성공", list));
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "독성 식품 전체 조회 성공", list));
     }
 
     // 이름으로 조회
     @GetMapping("/name/{name}")
     public ResponseEntity<ApiResponse<ToxicFoodResponseDTO>> getByName(@PathVariable("name") String name) {
-    	 ToxicFoodResponseDTO result = toxicFoodService.getByName(name);
-         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "이름 조회 성공", result));
+        ToxicFoodResponseDTO result = toxicFoodService.getByName(name);
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "독성 식품 이름 조회 성공", result));
     }
 
     // ID로 조회
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ToxicFoodResponseDTO>> getById(@PathVariable("id") Long id) {
         ToxicFoodResponseDTO result = toxicFoodService.getById(id);
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "ID 조회 성공", result));
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "독성 식품 ID 조회 성공", result));
     }
 }
-

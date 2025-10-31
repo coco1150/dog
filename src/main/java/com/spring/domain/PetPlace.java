@@ -31,7 +31,7 @@ public class PetPlace {
     @Enumerated(EnumType.STRING)
     private PlaceType type;          // 장소 유형 (병원, 식당, 카페 등)
 
-    private boolean petAllowed;      // 반려동물 동반 가능 여부
+    private Boolean petAllowed;      // 반려동물 동반 가능 여부
     private String description;      // 설명
     private String source;           // 데이터 출처 (예: KAKAO, CSV, USER)
 
