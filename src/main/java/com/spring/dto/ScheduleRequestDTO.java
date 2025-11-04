@@ -1,7 +1,9 @@
 package com.spring.dto;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -33,8 +35,8 @@ public class ScheduleRequestDTO {
     // 반복 간격(>=1)
     private Integer interval;
 
-    // 요일 목록을 CSV 문자열로 받음: "MON,WED,FRI"
-    private String daysOfWeek;
+    // 요일 목록을 CSV 문자열로 받음: "MONDAY,FRIDAY"
+    private List<DayOfWeek> daysOfWeek;
 
     // 매월 n일
     private Integer dayOfMonth;

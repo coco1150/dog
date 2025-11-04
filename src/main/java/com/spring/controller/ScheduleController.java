@@ -18,6 +18,7 @@ import com.spring.common.ApiResponse;
 import com.spring.domain.Schedule;
 import com.spring.dto.ScheduleRequestDTO;
 import com.spring.dto.ScheduleResponseDTO;
+import com.spring.dto.ScheduleUpdateDTO;
 import com.spring.exception.NotFoundException;
 import com.spring.repository.ScheduleRepository;
 import com.spring.service.ScheduleService;
@@ -43,7 +44,9 @@ public class ScheduleController {
 
 	// 일정 수정
 	@PutMapping("/{id}")
-	public ResponseEntity<ApiResponse<ScheduleResponseDTO>> update(@PathVariable("id") Long id,	@Valid @RequestBody ScheduleRequestDTO dto) {
+	public ResponseEntity<ApiResponse<ScheduleResponseDTO>> update(@PathVariable("id") Long id,
+			@RequestBody ScheduleUpdateDTO dto) {
+
 		ScheduleResponseDTO result = scheduleService.update(id, dto);
 		return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "일정 수정 성공", result));
 	}
@@ -68,13 +71,13 @@ public class ScheduleController {
 		ScheduleResponseDTO result = scheduleService.getById(id);
 		return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "단일 일정 조회 성공", result));
 	}
-	
-    // 반복 일정 발생일 미리보기
-    @GetMapping("/{id}/occurrences")
-    public ResponseEntity<ApiResponse<List<LocalDateTime>>> getOccurrences(@PathVariable("id") Long id) {
-        Schedule schedule = scheduleRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("해당 일정이 존재하지 않습니다."));
-        List<LocalDateTime> occurrences = scheduleService.generateOccurrences(schedule);
-        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "반복 일정 발생일 계산 성공", occurrences));
-    }
+
+	// 반복 일정 발생일 미리보기
+	@GetMapping("/{id}/occurrences")
+	public ResponseEntity<ApiResponse<List<LocalDateTime>>> getOccurrences(@PathVariable("id") Long id) {
+		Schedule schedule = scheduleRepository.findById(id)
+				.orElseThrow(() -> new NotFoundException("해당 일정이 존재하지 않습니다."));
+		List<LocalDateTime> occurrences = scheduleService.generateOccurrences(schedule);
+		return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "반복 일정 발생일 계산 성공", occurrences));
+	}
 }
