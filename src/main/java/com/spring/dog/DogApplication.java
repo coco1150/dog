@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication(
 	    scanBasePackages = "com.spring",
@@ -15,6 +16,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EnableJpaRepositories(basePackages = {"com.spring.repository"})
 @EntityScan(basePackages = {"com.spring.domain"})
 @ComponentScan(basePackages = {"com.spring"})
+@EnableScheduling
 
 public class DogApplication {
     public static void main(String[] args) {

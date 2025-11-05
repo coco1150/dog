@@ -1,5 +1,6 @@
 package com.spring.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,4 +12,6 @@ import com.spring.domain.ScheduleInstance;
 public interface ScheduleInstanceRepository extends JpaRepository<ScheduleInstance, Long> {
     void deleteAllByScheduleId(Long scheduleId);
     List<ScheduleInstance> findAllByScheduleId(Long scheduleId);
+    List<ScheduleInstance> findByCompletedFalseAndOccurrenceTimeBefore(LocalDateTime time);
+
 }

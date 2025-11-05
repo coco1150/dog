@@ -29,26 +29,29 @@ public class ScheduleService {
 
 	private final ScheduleRepository scheduleRepository;
 	private final ScheduleInstanceGenerator instanceGenerator;
+	private final ScheduleInstanceService scheduleInstanceService;
 
     // 일정 등록 (자동 인스턴스 생성 포함)
     @Transactional
     public ScheduleResponseDTO create(ScheduleRequestDTO dto) {
         boolean isRecurring = Boolean.TRUE.equals(dto.getRecurring());
-
+        
         // 유효성 검증
         if (isRecurring) {
             if (dto.getRecurrenceType() == null || dto.getRecurrenceType().isBlank())
                 throw new BadRequestException("반복 일정은 반복 유형을 지정해야 합니다.");
             if (dto.getInterval() == null || dto.getInterval() <= 0)
-                throw new BadRequestException("반복 간격(interval)은 1 이상이어야 합니다.");
+                throw new BadRequestException("반복 간격은 1 이상이어야 합니다.");
             if ("WEEKLY".equalsIgnoreCase(dto.getRecurrenceType()) &&
                 (dto.getDaysOfWeek() == null || dto.getDaysOfWeek().isEmpty()))
-                throw new BadRequestException("주간 반복 일정은 요일(daysOfWeek)을 지정해야 합니다.");
+                throw new BadRequestException("주간 반복 일정은 요일을 지정해야 합니다.");
             if (dto.getStartDate() == null)
-                throw new BadRequestException("반복 일정의 시작일(startDate)은 반드시 지정해야 합니다.");
+                throw new BadRequestException("반복 일정의 시작일은 반드시 지정해야 합니다.");
+            if (dto.getScheduleTime() == null)
+                throw new BadRequestException("반복 일정은 기준 시간이 필요합니다. 시간을 입력하세요.");
         } else {
             if (dto.getScheduleTime() == null)
-                throw new BadRequestException("단일 일정은 scheduleTime을 지정해야 합니다.");
+                throw new BadRequestException("단일 일정은 시간을 지정해야 합니다.");
         }
 
         try {
@@ -57,10 +60,9 @@ public class ScheduleService {
             s.setMemberId(dto.getMemberId());
             s.setTitle(dto.getTitle());
             s.setRecurring(isRecurring);
+            s.setScheduleTime(dto.getScheduleTime());
 
-            if (!isRecurring) {
-                s.setScheduleTime(dto.getScheduleTime());
-            } else {
+            if (isRecurring) {
                 RecurrenceRule rule = new RecurrenceRule();
                 rule.setType(RecurrenceType.valueOf(dto.getRecurrenceType().trim().toUpperCase()));
                 rule.setInterval(dto.getInterval());
@@ -79,10 +81,11 @@ public class ScheduleService {
                 s.setStartDate(dto.getStartDate());
                 s.setEndDate(dto.getEndDate());
             }
-
             // DB 저장
             Schedule saved = scheduleRepository.save(s);
-
+            saved = scheduleRepository.findById(saved.getId())
+                    .orElseThrow(() -> new InternalServerException("저장된 일정을 다시 조회할 수 없습니다."));
+            
             // 자동 인스턴스 생성
             instanceGenerator.generateInstances(saved);
 
@@ -113,29 +116,39 @@ public class ScheduleService {
             }
 
             if (isRecurring) {
+                // recurrenceRule이 null이면 새로 생성
+                if (existing.getRecurrenceRule() == null) {
+                    existing.setRecurrenceRule(new RecurrenceRule());
+                }
+
+                RecurrenceRule rule = existing.getRecurrenceRule();
+
                 if (dto.getRecurrenceType() != null && !dto.getRecurrenceType().isBlank()) {
-                    existing.getRecurrenceRule().setType(
-                            RecurrenceType.valueOf(dto.getRecurrenceType().toUpperCase()));
+                    rule.setType(RecurrenceType.valueOf(dto.getRecurrenceType().toUpperCase()));
                 }
 
                 if (dto.getInterval() != null) {
                     if (dto.getInterval() <= 0)
                         throw new BadRequestException("반복 간격은 1 이상이어야 합니다.");
-                    existing.getRecurrenceRule().setInterval(dto.getInterval());
+                    rule.setInterval(dto.getInterval());
                 }
 
-                if ("WEEKLY".equalsIgnoreCase(dto.getRecurrenceType()) &&
-                    (dto.getDaysOfWeek() == null || dto.getDaysOfWeek().isEmpty())) {
-                    throw new BadRequestException("주간 반복 일정은 요일을 지정해야 합니다.");
+                if ("WEEKLY".equalsIgnoreCase(dto.getRecurrenceType())) {
+                    if (dto.getDaysOfWeek() == null || dto.getDaysOfWeek().isEmpty()) {
+                        throw new BadRequestException("주간 반복 일정은 요일을 지정해야 합니다.");
+                    }
+                    rule.setDaysOfWeek(dto.getDaysOfWeek());
                 }
 
-                if ("MONTHLY".equalsIgnoreCase(dto.getRecurrenceType()) &&
-                    (dto.getDayOfMonth() == null || dto.getDayOfMonth() < 1 || dto.getDayOfMonth() > 31)) {
-                    throw new BadRequestException("매월 반복 일정은 1~31일 사이의 날짜를 지정해야 합니다.");
+                if ("MONTHLY".equalsIgnoreCase(dto.getRecurrenceType())) {
+                    if (dto.getDayOfMonth() == null || dto.getDayOfMonth() < 1 || dto.getDayOfMonth() > 31) {
+                        throw new BadRequestException("매월 반복 일정은 1~31일 사이의 날짜를 지정해야 합니다.");
+                    }
+                    rule.setDayOfMonth(dto.getDayOfMonth());
                 }
 
                 if (dto.getRepeatCount() != null) {
-                    existing.getRecurrenceRule().setRepeatCount(dto.getRepeatCount());
+                    rule.setRepeatCount(dto.getRepeatCount());
                 }
 
                 if (dto.getStartDate() != null) {
@@ -148,13 +161,20 @@ public class ScheduleService {
                     existing.setEndDate(dto.getEndDate());
                 }
 
+                // untilDate 추가
+                if (dto.getUntilDate() != null) {
+                    rule.setUntilDate(dto.getUntilDate());
+                }
+
             } else {
-                if (dto.getScheduleTime() != null)
-                    existing.setScheduleTime(dto.getScheduleTime());
+                // 반복 아님 → 단일 일정으로 변경 시 recurrenceRule 초기화 가능
+                existing.setRecurrenceRule(null);
             }
 
             Schedule updated = scheduleRepository.save(existing);
 
+            
+            scheduleInstanceService.regenerateInstances(updated);
             // 수정 시에도 인스턴스 재생성
             instanceGenerator.generateInstances(updated);
 
@@ -211,7 +231,7 @@ public class ScheduleService {
 	    // 반복 일정인 경우
 	    RecurrenceRule rule = schedule.getRecurrenceRule();
 	    if (rule.getType() == null) {
-	        throw new BadRequestException("반복 유형(type)이 지정되지 않았습니다.");
+	        throw new BadRequestException("반복 유형이 지정되지 않았습니다.");
 	    }
 	    if (schedule.getScheduleTime() == null) {
 	        throw new BadRequestException("반복 일정의 기준 시간이 없습니다.");

@@ -24,4 +24,5 @@ public class ScheduleUpdateDTO {
 	private Integer repeatCount; // 반복 횟수
 	private LocalDate startDate; // 시작일
 	private LocalDate endDate; // 종료일
+	private LocalDate untilDate;
 }

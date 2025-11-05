@@ -1,11 +1,15 @@
 package com.spring.service;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.spring.domain.RecurrenceRule;
 import com.spring.domain.Schedule;
 import com.spring.domain.ScheduleInstance;
 import com.spring.exception.InternalServerException;
@@ -22,17 +26,17 @@ public class ScheduleInstanceService {
 
     private final ScheduleRepository scheduleRepository;
     private final ScheduleInstanceRepository instanceRepository;
-    private final ScheduleService scheduleService;
+    
 
     // 특정 일정의 발생 인스턴스 생성
-    public List<ScheduleInstance> generateInstances(Long scheduleId) {
-        Schedule schedule = scheduleRepository.findById(scheduleId)
-                .orElseThrow(() -> new NotFoundException("해당 ID의 일정이 존재하지 않습니다."));
+    public List<ScheduleInstance> generateInstances(Schedule schedule) {
+        if (schedule == null) {
+            throw new IllegalArgumentException("Schedule이 null입니다.");
+        }
 
-        // 기존 인스턴스 삭제 후 다시 생성 (중복 방지)
-        instanceRepository.deleteAllByScheduleId(scheduleId);
+        instanceRepository.deleteAllByScheduleId(schedule.getId());
 
-        List<LocalDateTime> occurrenceTimes = scheduleService.generateOccurrences(schedule);
+        List<LocalDateTime> occurrenceTimes = generateOccurrences(schedule);
 
         for (LocalDateTime time : occurrenceTimes) {
             ScheduleInstance instance = new ScheduleInstance();
@@ -41,8 +45,54 @@ public class ScheduleInstanceService {
             instanceRepository.save(instance);
         }
 
-        return instanceRepository.findAllByScheduleId(scheduleId);
+        return instanceRepository.findAllByScheduleId(schedule.getId());
     }
+    
+    
+    // 일정에서 발생 시간을 계산하는 내부 메소드 (scheduleService 대신 직접 계산)
+    private List<LocalDateTime> generateOccurrences(Schedule schedule) {
+        List<LocalDateTime> occurrences = new ArrayList<>();
+        RecurrenceRule rule = schedule.getRecurrenceRule();
+        if (rule == null) return occurrences;
+
+        LocalDate current = schedule.getStartDate();
+        LocalDate end = schedule.getEndDate() != null ? schedule.getEndDate() : current.plusMonths(3);
+        int interval = rule.getInterval() != null ? rule.getInterval() : 1;
+
+        switch (rule.getType()) {
+            case DAILY -> {
+                while (!current.isAfter(end)) {
+                    occurrences.add(LocalDateTime.of(current, schedule.getScheduleTime().toLocalTime()));
+                    current = current.plusDays(interval);
+                }
+            }
+            case WEEKLY -> {
+                List<DayOfWeek> days = rule.getDaysOfWeek() != null ? rule.getDaysOfWeek() : List.of();
+                while (!current.isAfter(end)) {
+                    for (DayOfWeek day : days) {
+                        LocalDate d = current.with(java.time.temporal.TemporalAdjusters.nextOrSame(day));
+                        if (!d.isAfter(end)) {
+                            occurrences.add(LocalDateTime.of(d, schedule.getScheduleTime().toLocalTime()));
+                        }
+                    }
+                    current = current.plusWeeks(interval);
+                }
+            }
+            case MONTHLY -> {
+                int day = rule.getDayOfMonth() != null ? rule.getDayOfMonth()
+                        : schedule.getStartDate().getDayOfMonth();
+                while (!current.isAfter(end)) {
+                    LocalDate d = current.withDayOfMonth(Math.min(day, current.lengthOfMonth()));
+                    occurrences.add(LocalDateTime.of(d, schedule.getScheduleTime().toLocalTime()));
+                    current = current.plusMonths(interval);
+                }
+            }
+            default -> throw new IllegalArgumentException("지원하지 않는 반복 유형입니다.");
+        }
+
+        return occurrences;
+    }   
+    
 
     // 특정 일정의 모든 발생 인스턴스 조회
     @Transactional(readOnly = true)
@@ -61,12 +111,13 @@ public class ScheduleInstanceService {
     @Transactional
     public void deleteAllByScheduleId(Long scheduleId) {
         if (scheduleId == null)
-            throw new IllegalArgumentException("scheduleId가 null입니다.");
-
-        try {
-            instanceRepository.deleteAllByScheduleId(scheduleId);
-        } catch (Exception e) {
-            throw new InternalServerException("스케줄 인스턴스 삭제 중 오류가 발생했습니다: " + e.getMessage());
-        }
+            throw new IllegalArgumentException("scheduleId가 비어있습니다.");
+        instanceRepository.deleteAllByScheduleId(scheduleId);
+    }
+    
+    @Transactional
+    public void regenerateInstances(Schedule schedule) {
+        deleteAllByScheduleId(schedule.getId());
+        generateInstances(schedule);
     }
 }

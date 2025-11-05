@@ -27,7 +27,7 @@ public class ScheduleInstance {
     private LocalDateTime occurrenceTime; // 실제 발생 시간
 
     @Column(nullable = false)
-    private boolean completed = false; // 완료 여부 (향후 사용)
+    private Boolean completed = false; // 완료 여부 (향후 사용)
     
     public ScheduleInstance(Schedule schedule, LocalDateTime occurrenceTime) {
         this.schedule = schedule;
