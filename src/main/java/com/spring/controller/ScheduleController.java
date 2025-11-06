@@ -21,6 +21,7 @@ import com.spring.dto.ScheduleResponseDTO;
 import com.spring.dto.ScheduleUpdateDTO;
 import com.spring.exception.NotFoundException;
 import com.spring.repository.ScheduleRepository;
+import com.spring.service.ScheduleInstanceService;
 import com.spring.service.ScheduleService;
 
 import jakarta.validation.Valid;
@@ -33,7 +34,8 @@ public class ScheduleController {
 
 	private final ScheduleService scheduleService;
 	private final ScheduleRepository scheduleRepository;
-
+	private final ScheduleInstanceService scheduleInstanceService;
+	
 	// 일정 등록
 	@PostMapping
 	public ResponseEntity<ApiResponse<ScheduleResponseDTO>> create(@Valid @RequestBody ScheduleRequestDTO dto) {
@@ -48,6 +50,11 @@ public class ScheduleController {
 			@RequestBody ScheduleUpdateDTO dto) {
 
 		ScheduleResponseDTO result = scheduleService.update(id, dto);
+		
+	    Schedule schedule = scheduleRepository.findById(id)
+	            .orElseThrow(() -> new NotFoundException("일정을 찾을 수 없습니다."));
+	    scheduleInstanceService.regenerateInstances(schedule);
+	    
 		return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "일정 수정 성공", result));
 	}
 

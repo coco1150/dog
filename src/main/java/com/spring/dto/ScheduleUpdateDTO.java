@@ -25,4 +25,5 @@ public class ScheduleUpdateDTO {
 	private LocalDate startDate; // 시작일
 	private LocalDate endDate; // 종료일
 	private LocalDate untilDate;
+	private Integer remindBeforeMinutes;
 }

@@ -35,6 +35,7 @@ public class ScheduleResponseDTO {
     private LocalDate startDate;
     private LocalDate endDate;
     private LocalDate untilDate;
+    private Integer remindBeforeMinutes;
     
     public static ScheduleResponseDTO fromEntity(Schedule s) {
         RecurrenceRule rule = s.getRecurrenceRule();
@@ -53,6 +54,7 @@ public class ScheduleResponseDTO {
                 .untilDate(rule != null ? rule.getUntilDate() : null)
                 .startDate(s.getStartDate())
                 .endDate(s.getEndDate())
+                .remindBeforeMinutes(s.getRemindBeforeMinutes())
                 .build();
     }
 }

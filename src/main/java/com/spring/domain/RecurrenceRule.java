@@ -39,6 +39,8 @@ public class RecurrenceRule {
     @Column(nullable = false)
     private Integer interval = 1; // 예: 2 → 2일마다
 
+    private Integer nthWeek;
+    
     // WEEKLY일 때만 사용 (월~일)
     @ElementCollection
     @CollectionTable(

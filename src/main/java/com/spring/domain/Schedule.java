@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -37,4 +38,6 @@ public class Schedule {
 	@OneToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "recurrence_rule_id")
 	private RecurrenceRule recurrenceRule; // 반복 규칙 연결
+	@Column(name = "remind_before_minutes")
+	private Integer remindBeforeMinutes; // ex: 30 → 30분 전 알림
 }

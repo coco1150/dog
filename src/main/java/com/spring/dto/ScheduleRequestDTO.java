@@ -51,4 +51,5 @@ public class ScheduleRequestDTO {
     private LocalDate startDate;
     private LocalDate endDate;
     private LocalDate untilDate;
+    private Integer remindBeforeMinutes;
 }

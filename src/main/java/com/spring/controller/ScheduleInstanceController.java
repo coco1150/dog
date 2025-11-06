@@ -4,10 +4,16 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.spring.common.ApiResponse;
 import com.spring.domain.ScheduleInstance;
+import com.spring.dto.ScheduleInstanceResponseDTO;
 import com.spring.service.ScheduleInstanceService;
 
 import lombok.RequiredArgsConstructor;
@@ -30,10 +36,13 @@ public class ScheduleInstanceController {
 
     // 특정 스케줄의 인스턴스 조회
     @GetMapping("/{id}/instances")
-    public ResponseEntity<ApiResponse<List<ScheduleInstance>>> getInstances(@PathVariable("id") Long id) {
+    public ResponseEntity<ApiResponse<List<ScheduleInstanceResponseDTO>>> getInstances(@PathVariable("id") Long id) {
         List<ScheduleInstance> instances = instanceService.getInstances(id);
-        return ResponseEntity
-                .ok(ApiResponse.success(HttpStatus.OK, "일정 인스턴스 조회 성공", instances));
+        List<ScheduleInstanceResponseDTO> response = instances.stream()
+                .map(ScheduleInstanceResponseDTO::fromEntity)
+                .toList();
+
+        return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK, "일정 인스턴스 조회 성공", response));
     }
 
     // 특정 인스턴스 완료 처리

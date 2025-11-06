@@ -29,7 +29,6 @@ public class ScheduleService {
 
 	private final ScheduleRepository scheduleRepository;
 	private final ScheduleInstanceGenerator instanceGenerator;
-	private final ScheduleInstanceService scheduleInstanceService;
 
     // 일정 등록 (자동 인스턴스 생성 포함)
     @Transactional
@@ -61,6 +60,7 @@ public class ScheduleService {
             s.setTitle(dto.getTitle());
             s.setRecurring(isRecurring);
             s.setScheduleTime(dto.getScheduleTime());
+            s.setRemindBeforeMinutes(dto.getRemindBeforeMinutes());
 
             if (isRecurring) {
                 RecurrenceRule rule = new RecurrenceRule();
@@ -80,6 +80,7 @@ public class ScheduleService {
                 s.setRecurrenceRule(rule);
                 s.setStartDate(dto.getStartDate());
                 s.setEndDate(dto.getEndDate());
+                
             }
             // DB 저장
             Schedule saved = scheduleRepository.save(s);
@@ -174,9 +175,9 @@ public class ScheduleService {
             Schedule updated = scheduleRepository.save(existing);
 
             
-            scheduleInstanceService.regenerateInstances(updated);
-            // 수정 시에도 인스턴스 재생성
-            instanceGenerator.generateInstances(updated);
+//            scheduleInstanceService.regenerateInstances(updated);
+//            // 수정 시에도 인스턴스 재생성
+//            instanceGenerator.generateInstances(updated);
 
             return ScheduleResponseDTO.fromEntity(updated);
 
@@ -348,36 +349,6 @@ public class ScheduleService {
 	        throw new InternalServerException("반복 일정 계산 중 오류가 발생했습니다: " + e.getMessage());
 	    }
 	}	
-	
-	private ScheduleResponseDTO toResponse(Schedule s) {
-	    if (Boolean.TRUE.equals(s.getRecurring()) && s.getRecurrenceRule() != null) {
-	        var r = s.getRecurrenceRule();
-	        return new ScheduleResponseDTO(
-	                s.getId(),
-	                s.getMemberId(),
-	                s.getTitle(),
-	                true,
-	                null, // 단일 일정이 아니므로 null
-	                r.getType(),
-	                r.getInterval(),
-	                r.getDaysOfWeek(),   // List<DayOfWeek> 그대로
-	                r.getDayOfMonth(),
-	                r.getRepeatCount(),
-	                s.getStartDate(),
-	                s.getEndDate(),
-	                r.getUntilDate()
-	        );
-	    } else {
-	        return new ScheduleResponseDTO(
-	                s.getId(),
-	                s.getMemberId(),
-	                s.getTitle(),
-	                false,
-	                s.getScheduleTime(),
-	                null, null, null, null, null,
-	                null, null, null
-	        );
-	    }
-	}
+
 
 }
