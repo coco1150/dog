@@ -5,6 +5,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,6 +20,7 @@ import lombok.Setter;
 public class ScheduleUpdateDTO {
 
 	private String title; // 일정 제목
+
 	private LocalDateTime scheduleTime; // 단일 일정일 경우
 	private Boolean recurring; // 반복 여부
 	private String recurrenceType; // DAILY, WEEKLY, MONTHLY
@@ -25,5 +31,6 @@ public class ScheduleUpdateDTO {
 	private LocalDate startDate; // 시작일
 	private LocalDate endDate; // 종료일
 	private LocalDate untilDate;
+	@Min(1)
 	private Integer remindBeforeMinutes;
 }
