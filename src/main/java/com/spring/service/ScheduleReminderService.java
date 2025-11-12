@@ -21,6 +21,7 @@ public class ScheduleReminderService {
 
 	private final ScheduleInstanceRepository instanceRepository;
 	private final ReminderLogRepository reminderLogRepository;
+	private final KakaoPushService kakaoPushService;
 
 	@Scheduled(fixedRate = 60000) // 1분마다 실행
 	public void checkUpcomingReminders() {
@@ -47,6 +48,16 @@ public class ScheduleReminderService {
 
 				reminderLogRepository.save(ReminderLog.builder().scheduleInstance(instance).reminderTime(now)
 						.message(msg).success(true).build());
+				log.info("[리마인더 발송] {}", msg);
+				
+                // 카카오 푸시 테스트 발송
+                try {
+                    String uuid = "TEST_UUID"; // 실제론 사용자 DB에서 가져옴
+                    kakaoPushService.sendPush(uuid, title, msg);
+                } catch (Exception e) {
+                    log.error("푸시 발송 실패: {}", e.getMessage(), e);
+                }
+				
 			}
 		}
 	}
