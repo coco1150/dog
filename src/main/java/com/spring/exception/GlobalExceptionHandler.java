@@ -12,7 +12,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.spring.common.ApiResponse;
 
-@RestControllerAdvice
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@RestControllerAdvice(basePackages = "com.spring")
 public class GlobalExceptionHandler {
 
     // DTO 검증 실패 (예: @NotNull, @NotBlank 위반)
@@ -23,6 +26,9 @@ public class GlobalExceptionHandler {
                 .stream()
                 .map(e -> e.getField() + ": " + e.getDefaultMessage())
                 .collect(Collectors.joining(", "));
+        
+        log.warn("[Validation Error] Invalid request fields: {}", errorMessages);
+        
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(HttpStatus.BAD_REQUEST, errorMessages));
@@ -31,7 +37,10 @@ public class GlobalExceptionHandler {
     // 잘못된 요청 (IllegalArgumentException)
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException ex) {
-        return ResponseEntity
+        
+    	log.warn("[Bad Request] {}", ex.getMessage());
+    	
+    	return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(HttpStatus.BAD_REQUEST, ex.getMessage()));
     }
@@ -39,7 +48,10 @@ public class GlobalExceptionHandler {
     // 데이터 없음 (NoSuchElementException)
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<ApiResponse<Void>> handleNoSuchElement(NoSuchElementException ex) {
-        return ResponseEntity
+        
+    	log.info("[Not Found] {}", ex.getMessage());
+    	
+    	return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.error(HttpStatus.NOT_FOUND, ex.getMessage()));
     }
@@ -47,7 +59,7 @@ public class GlobalExceptionHandler {
     // 그 외 모든 예외 (서버 내부 오류)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGeneric(Exception ex) {
-        ex.printStackTrace(); // 개발 중에는 로그로 남겨두기
+    	log.error("[Unhandled Exception] {}", ex.getMessage(), ex);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다."));
@@ -56,7 +68,10 @@ public class GlobalExceptionHandler {
  // 커스텀 예외 - 잘못된 요청
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ApiResponse<Void>> handleBadRequest(BadRequestException ex) {
-        return ResponseEntity
+       
+    	log.warn("[BadRequestException] {}", ex.getMessage());
+    	
+    	return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(HttpStatus.BAD_REQUEST, ex.getMessage()));
     }
@@ -64,7 +79,10 @@ public class GlobalExceptionHandler {
     // 커스텀 예외 - 리소스 없음
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleNotFound(NotFoundException ex) {
-        return ResponseEntity
+        
+    	log.info("[NotFoundException] {}", ex.getMessage());
+    	
+    	return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.error(HttpStatus.NOT_FOUND, ex.getMessage()));
     }
@@ -72,7 +90,10 @@ public class GlobalExceptionHandler {
     // 커스텀 예외 - 서버 내부 오류
     @ExceptionHandler(InternalServerException.class)
     public ResponseEntity<ApiResponse<Void>> handleInternal(InternalServerException ex) {
-        return ResponseEntity
+        
+    	log.error("[InternalServerException] {}", ex.getMessage(), ex);
+    	
+    	return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage()));
     }
@@ -80,9 +101,15 @@ public class GlobalExceptionHandler {
     // json
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<Void>> handleJsonParseError(HttpMessageNotReadableException ex) {
-        return ResponseEntity
+        
+    	log.warn("[JSON Parse Error] Malformed request body: {}", ex.getMessage());
+    	
+    	return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(HttpStatus.BAD_REQUEST, "요청 형식이 잘못되었습니다. JSON 구조를 확인해주세요."));
     }
+    
+    
+    
 
 }
