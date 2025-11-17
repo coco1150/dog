@@ -22,11 +22,11 @@ public class ToxicFood {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	private String name; //식품명
-	 @Enumerated(EnumType.STRING)
+	@Enumerated(EnumType.STRING)
 	private ToxicFoodCategory category;//분류(초콜릿,견과류,과일류 등등)
 //	private ToxicIngredient ingredient;//성분명
 //	private String additionalIngredient;//기타성분(텍스트)
-	 @Enumerated(EnumType.STRING)
+	@Enumerated(EnumType.STRING)
 	private ToxicityLevel toxicityLevel;//독성등급(안전, 위험, 치명적)
 	private String description;//설명(객관적정보)
 //	private String symptoms;//섭취 시 나타날 수 있는 증상들

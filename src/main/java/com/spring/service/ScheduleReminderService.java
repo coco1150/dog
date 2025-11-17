@@ -30,6 +30,7 @@ public class ScheduleReminderService {
 
 		// 1시간 내 일정만 조회 (리마인더 기준 탐색용)
 		List<ScheduleInstance> instances = instanceRepository.findWithScheduleByOccurrenceTimeBetween(now, in1hour);
+		log.info("[리마인더 점검] 조회된 일정 수: {}", instances.size());
 
 		for (ScheduleInstance instance : instances) {
 			if (instance.getSchedule() == null)

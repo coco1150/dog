@@ -39,5 +39,5 @@ public class Schedule {
 	@JoinColumn(name = "recurrence_rule_id")
 	private RecurrenceRule recurrenceRule; // 반복 규칙 연결
 	@Column(name = "remind_before_minutes")
-	private Integer remindBeforeMinutes; // ex: 30 → 30분 전 알림
+	private Integer remindBeforeMinutes=5; // ex: 30 → 30분 전 알림, 기본5
 }

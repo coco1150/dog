@@ -36,7 +36,7 @@ public class RecurrenceRule {
     private RecurrenceType type; // DAILY, WEEKLY, MONTHLY
 
     // 반복 간격(일/주/월)
-    @Column(nullable = false)
+    @Column(nullable = false, name="interval_value")
     private Integer interval = 1; // 예: 2 → 2일마다
 
     private Integer nthWeek;
