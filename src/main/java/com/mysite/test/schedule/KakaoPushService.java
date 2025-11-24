@@ -1,4 +1,4 @@
-package com.mysite.test.place;
+package com.mysite.test.schedule;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;

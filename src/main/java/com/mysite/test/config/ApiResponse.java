@@ -1,4 +1,4 @@
-package com.mysite.test.place;
+package com.mysite.test.config;
 
 import org.springframework.http.HttpStatus;
 
